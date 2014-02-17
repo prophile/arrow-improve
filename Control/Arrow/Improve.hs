@@ -100,6 +100,12 @@ instance (ArrowState s a) => ArrowState s (ImproveArrow a) where
   fetch = lift fetch
   store = lift store
 
+instance (ArrowReader r a) => ArrowReader r (ImproveArrow a) where
+  readState = lift readState
+  newReader IId = IArr fst
+  newReader (IConst k) = IConst k
+  newReader x = IArrow (newReader (lowerImprove x))
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

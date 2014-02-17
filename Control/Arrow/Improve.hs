@@ -10,6 +10,7 @@ import Control.Category
 import Control.Arrow
 
 import Control.Arrow.Transformer
+import Control.Arrow.Operations
 
 data ImproveArrow a b c where
   IArrow :: a b c    -> ImproveArrow a b c
@@ -90,6 +91,9 @@ instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
     where f' x         = let (y, k) = f (x, k) in y
   loop (IConst (k, _)) = IConst k
   loop (IArrow f)      = IArrow (loop f)
+
+instance (ArrowCircuit a) => ArrowCircuit (ImproveArrow a) where
+  delay = lift . delay
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

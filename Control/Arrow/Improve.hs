@@ -71,6 +71,12 @@ instance (Arrow a) => Arrow (ImproveArrow a) where
   IConst k &&& IArrow f = IArrow f >>> IArr (\x -> (k, x))
   f        &&& g        = IArr (\x -> (x, x)) >>> (f *** g)
 
+instance (ArrowZero a) => ArrowZero (ImproveArrow a) where
+  zeroArrow = IArrow zeroArrow
+
+instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
+  f <+> g = lift (lowerImprove f <+> lowerImprove g)
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

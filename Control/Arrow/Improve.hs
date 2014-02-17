@@ -12,6 +12,7 @@ import Control.Arrow
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Zip
 
 import Control.Arrow.Transformer
 import Control.Arrow.Operations
@@ -157,6 +158,9 @@ instance (ArrowApply a) => Monad (ImproveArrow a b) where
 instance (ArrowPlus a, ArrowApply a) => MonadPlus (ImproveArrow a b) where
   mzero = zeroArrow
   mplus = (<+>)
+
+instance (ArrowApply a) => MonadZip (ImproveArrow a b) where
+  mzip = (&&&)
 
 instance (Arrow a) => Profunctor (ImproveArrow a) where
   dimap f g x = f ^>> x >>^ g

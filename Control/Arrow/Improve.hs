@@ -58,6 +58,19 @@ instance (Arrow a) => Arrow (ImproveArrow a) where
   IConst k *** IArr f   = IArr ((\_ -> k) *** f)
   f        *** g        = first f >>> second g
 
+  IId      &&& IId      = IArr (\x -> (x, x))
+  IArr f   &&& IId      = IArr (\x -> (f x, x))
+  IId      &&& IArr f   = IArr (\x -> (x, f x))
+  IArr f   &&& IArr g   = IArr (\x -> (f x, g x))
+  IConst k &&& IConst j = IConst (k, j)
+  IId      &&& IConst k = IArr (\x -> (x, k))
+  IConst k &&& IId      = IArr (\x -> (k, x))
+  IConst k &&& IArr f   = IArr (\x -> (k, f x))
+  IArr f   &&& IConst k = IArr (\x -> (f x, k))
+  IArrow f &&& IConst k = IArrow f >>> IArr (\x -> (x, k))
+  IConst k &&& IArrow f = IArrow f >>> IArr (\x -> (k, x))
+  f        &&& g        = IArr (\x -> (x, x)) >>> (f *** g)
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

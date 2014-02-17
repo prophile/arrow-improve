@@ -98,6 +98,11 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   right (IConst k) = IArr (right (const k))
   right (IArrow a) = IArrow (right a)
 
+  IId +++ IId = IId
+  IId +++ f = right f
+  f +++ IId = left f
+  a +++ b = lift $ (lowerImprove a) +++ (lowerImprove b)
+
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
 

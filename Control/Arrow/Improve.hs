@@ -35,6 +35,7 @@ lowerImprove (IConst k) = arr (\_ -> k)
 
 instance (Arrow a) => Category (ImproveArrow a) where
   id = IId
+  {-# INLINE id #-}
   IId      . x        = x
   x        . IId      = x
   IConst k . IArr _   = IConst k
@@ -49,6 +50,8 @@ instance (Arrow a) => Category (ImproveArrow a) where
 
 instance (Arrow a) => Arrow (ImproveArrow a) where
   arr = IArr
+  {-# INLINE arr #-}
+
   first (IArrow x) = IArrow (first x)
   first (IArr f)   = IArr (first f)
   first (IConst k) = IArr (first (\_ -> k))
@@ -83,9 +86,11 @@ instance (Arrow a) => Arrow (ImproveArrow a) where
 
 instance (ArrowZero a) => ArrowZero (ImproveArrow a) where
   zeroArrow = IArrow zeroArrow
+  {-# INLINE zeroArrow #-}
 
 instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
   f <+> g = lift (lowerImprove f <+> lowerImprove g)
+  {-# INLINE (<+>) #-}
 
 instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   left IId        = IId
@@ -120,6 +125,7 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
 
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
+  {-# INLINE app #-}
 
 instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
   loop IId             = IId
@@ -130,19 +136,24 @@ instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
 
 instance (ArrowCircuit a) => ArrowCircuit (ImproveArrow a) where
   delay = lift . delay
+  {-# INLINE delay #-}
 
 instance (ArrowState s a) => ArrowState s (ImproveArrow a) where
   fetch = lift fetch
+  {-# INLINE fetch #-}
   store = lift store
+  {-# INLINE store #-}
 
 instance (ArrowReader r a) => ArrowReader r (ImproveArrow a) where
   readState = lift readState
+  {-# INLINE readState #-}
   newReader IId = IArr fst
   newReader (IConst k) = IConst k
   newReader x = IArrow (newReader (lowerImprove x))
 
 instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
   write = lift write
+  {-# INLINE write #-}
   newWriter IId        = IArr (\x -> (x, mempty))
   newWriter (IConst k) = IConst (k, mempty)
   newWriter (IArr f)   = IArr ((\x -> (x, mempty)) . f)
@@ -150,6 +161,7 @@ instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
 
 instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
   raise = lift raise
+  {-# INLINE raise #-}
 
   handle IId _        = IId
   handle (IConst k) _ = IConst k
@@ -168,40 +180,57 @@ instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
 
 instance (Arrow a) => Functor (ImproveArrow a b) where
   fmap f = (>>^ f)
+  {-# INLINE fmap #-}
 
 instance (Arrow a) => Applicative (ImproveArrow a b) where
   pure = IConst
+  {-# INLINE pure #-}
   f <*> x = (f &&& x) >>> arr (uncurry id)
+  {-# INLINE (<*>) #-}
 
 instance (ArrowPlus a) => Alternative (ImproveArrow a b) where
   empty = zeroArrow
+  {-# INLINE empty #-}
   (<|>) = (<+>)
+  {-# INLINE (<|>) #-}
 
 instance (ArrowApply a) => Monad (ImproveArrow a b) where
   return = IConst
+  {-# INLINE return #-}
   IConst k >>= f = f k
   x >>= f = ((x >>^ f) &&& id) >>> app
 
 instance (ArrowPlus a, ArrowApply a) => MonadPlus (ImproveArrow a b) where
   mzero = zeroArrow
+  {-# INLINE mzero #-}
   mplus = (<+>)
+  {-# INLINE mplus #-}
 
 instance (ArrowApply a) => MonadZip (ImproveArrow a b) where
   mzip = (&&&)
+  {-# INLINE mzip #-}
 
 instance (Arrow a) => Profunctor (ImproveArrow a) where
   dimap f g x = f ^>> x >>^ g
+  {-# INLINE dimap #-}
   lmap f x = f ^>> x
+  {-# INLINE lmap #-}
   rmap g x = x >>^ g
+  {-# INLINE rmap #-}
 
 instance (Arrow a) => Strong (ImproveArrow a) where
   first' = first
+  {-# INLINE first' #-}
   second' = second
+  {-# INLINE second' #-}
 
 instance (ArrowChoice a) => Choice (ImproveArrow a) where
   left' = left
+  {-# INLINE left' #-}
   right' = right
+  {-# INLINE right' #-}
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
+  {-# INLINE lift #-}
 

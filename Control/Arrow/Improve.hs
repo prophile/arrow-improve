@@ -115,6 +115,24 @@ instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
   newWriter (IArr f)   = IArr ((\x -> (x, mempty)) . f)
   newWriter (IArrow a) = IArrow (newWriter a)
 
+instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
+  raise = lift raise
+
+  handle IId _        = IId
+  handle (IConst k) _ = IConst k
+  handle (IArr f) _   = IArr f
+  handle (IArrow f) e = IArrow (handle f (lowerImprove e))
+
+  tryInUnless IId f _        = IArr (\x -> (x, x)) >>> f
+  tryInUnless (IConst k) f _ = IArr (\x -> (x, k)) >>> f
+  tryInUnless (IArr g) f _   = IArr (\x -> (x, g x)) >>> f
+  tryInUnless (IArrow a) f e = IArrow (tryInUnless a (lowerImprove f) (lowerImprove e))
+
+  newError IId        = IArr Right
+  newError (IConst k) = IConst (Right k)
+  newError (IArr f)   = IArr (Right . f)
+  newError (IArrow f) = IArrow (newError f)
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

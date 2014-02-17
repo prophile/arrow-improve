@@ -46,7 +46,7 @@ instance (Arrow a) => Category (ImproveArrow a) where
   IArr f   . IArrow g = IArrow (g >>^ f)
   IArrow f . IArr g   = IArrow (g ^>> f)
   IArrow f . IConst k = IArrow ((\_ -> k) ^>> f)
-  IArrow f . IArrow g = IArrow (g >>> f)
+  IArrow f . IArrow g = IArrow (f . g)
 
 instance (Arrow a) => Arrow (ImproveArrow a) where
   arr = IArr
@@ -185,7 +185,7 @@ instance (Arrow a) => Functor (ImproveArrow a b) where
 instance (Arrow a) => Applicative (ImproveArrow a b) where
   pure = IConst
   {-# INLINE pure #-}
-  f <*> x = (f &&& x) >>> arr (uncurry id)
+  f <*> x = (f &&& x) >>^ uncurry id
   {-# INLINE (<*>) #-}
 
 instance (ArrowPlus a) => Alternative (ImproveArrow a b) where

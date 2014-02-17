@@ -104,7 +104,7 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   IArr f   +++ IArr g   = IArr (f +++ g)
   IArr f   +++ IConst k = IArr (f +++ const k)
   IConst k +++ IArr f   = IArr (const k +++ f)
-  IConst k +++ IConst j = IArr (k +++ j)
+  IConst k +++ IConst j = IArr (const k +++ const j)
   a        +++ b        = lift $ (lowerImprove a) +++ (lowerImprove b)
 
   IId      ||| IId      = IArr (either id id)

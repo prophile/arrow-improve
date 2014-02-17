@@ -19,7 +19,9 @@ import Control.Arrow.Transformer
 import Control.Arrow.Operations
 
 import Data.Profunctor
-
+import Data.Semigroupoid
+import Data.Functor.Plus
+import Data.Functor.Bind
 import Data.Pointed
 
 import Data.Monoid
@@ -241,6 +243,26 @@ instance (ArrowChoice a) => Choice (ImproveArrow a) where
 instance (Arrow a) => Pointed (ImproveArrow a b) where
   point = pure
   {-# INLINE point #-}
+
+instance (Arrow a) => Semigroupoid (ImproveArrow a) where
+  o = (.)
+  {-# INLINE o #-}
+
+instance (ArrowPlus a) => Alt (ImproveArrow a b) where
+  (<!>) = (<+>)
+  {-# INLINE (<!>) #-}
+
+instance (Arrow a) => Apply (ImproveArrow a b) where
+  (<.>) = (<*>)
+  {-# INLINE (<.>) #-}
+
+instance (ArrowApply a) => Bind (ImproveArrow a b) where
+  (>>-) = (>>=)
+  {-# INLINE (>>-) #-}
+
+instance (ArrowPlus a) => Plus (ImproveArrow a b) where
+  zero = zeroArrow
+  {-# INLINE zero #-}
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

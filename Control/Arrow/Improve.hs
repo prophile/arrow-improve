@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Control.Arrow.Improve(ImproveArrow, lowerImprove) where
 
@@ -94,6 +95,10 @@ instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
 
 instance (ArrowCircuit a) => ArrowCircuit (ImproveArrow a) where
   delay = lift . delay
+
+instance (ArrowState s a) => ArrowState s (ImproveArrow a) where
+  fetch = lift fetch
+  store = lift store
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

@@ -77,6 +77,10 @@ instance (ArrowZero a) => ArrowZero (ImproveArrow a) where
 instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
   f <+> g = lift (lowerImprove f <+> lowerImprove g)
 
+instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
+  left  = lift . left . lowerImprove
+  right = lift . right . lowerImprove
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

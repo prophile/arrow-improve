@@ -81,6 +81,9 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   left  = lift . left . lowerImprove
   right = lift . right . lowerImprove
 
+instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
+  app = lift $ first lowerImprove ^>> app
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

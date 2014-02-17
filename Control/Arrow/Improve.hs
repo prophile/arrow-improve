@@ -13,6 +13,8 @@ import Control.Arrow
 import Control.Arrow.Transformer
 import Control.Arrow.Operations
 
+import Data.Monoid
+
 data ImproveArrow a b c where
   IArrow :: a b c    -> ImproveArrow a b c
   IArr   :: (b -> c) -> ImproveArrow a b c
@@ -105,6 +107,13 @@ instance (ArrowReader r a) => ArrowReader r (ImproveArrow a) where
   newReader IId = IArr fst
   newReader (IConst k) = IConst k
   newReader x = IArrow (newReader (lowerImprove x))
+
+instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
+  write = lift write
+  newWriter IId        = IArr (\x -> (x, mempty))
+  newWriter (IConst k) = IConst (k, mempty)
+  newWriter (IArr f)   = IArr ((\x -> (x, mempty)) . f)
+  newWriter (IArrow a) = IArrow (newWriter a)
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

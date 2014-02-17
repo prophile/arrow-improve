@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- |Improved arrows, with a whole host of minor optimisations and instances.
 module Control.Arrow.Improve(ImproveArrow, lowerImprove) where
 
 import Prelude hiding (id, (.))
@@ -21,12 +22,17 @@ import Data.Profunctor
 
 import Data.Monoid
 
+-- |Basic improved arrow type.
 data ImproveArrow a b c where
   IArrow :: a b c    -> ImproveArrow a b c
   IArr   :: (b -> c) -> ImproveArrow a b c
   IId    ::             ImproveArrow a b b
   IConst :: c        -> ImproveArrow a b c
 
+-- |Lower an improved arrow to the original arrow type.
+--
+-- prop>  lowerImprove . lift = id
+-- prop>  lift . lowerImprove = id
 lowerImprove :: (Arrow a) => ImproveArrow a b c -> a b c
 lowerImprove (IArrow a) = a
 lowerImprove (IArr f)   = arr f

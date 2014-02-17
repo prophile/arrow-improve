@@ -20,6 +20,8 @@ import Control.Arrow.Operations
 
 import Data.Profunctor
 
+import Data.Pointed
+
 import Data.Monoid
 
 -- |Basic improved arrow type.
@@ -235,6 +237,10 @@ instance (ArrowChoice a) => Choice (ImproveArrow a) where
   {-# INLINE left' #-}
   right' = right
   {-# INLINE right' #-}
+
+instance (Arrow a) => Pointed (ImproveArrow a b) where
+  point = pure
+  {-# INLINE point #-}
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

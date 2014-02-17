@@ -11,6 +11,7 @@ import Control.Category
 import Control.Arrow
 
 import Control.Applicative
+import Control.Monad
 
 import Control.Arrow.Transformer
 import Control.Arrow.Operations
@@ -152,6 +153,10 @@ instance (ArrowApply a) => Monad (ImproveArrow a b) where
   return = IConst
   IConst k >>= f = f k
   x >>= f = ((x >>^ f) &&& id) >>> app
+
+instance (ArrowPlus a, ArrowApply a) => MonadPlus (ImproveArrow a b) where
+  mzero = zeroArrow
+  mplus = (<+>)
 
 instance (Arrow a) => Profunctor (ImproveArrow a) where
   dimap f g x = f ^>> x >>^ g

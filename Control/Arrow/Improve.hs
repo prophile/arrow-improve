@@ -107,6 +107,17 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   IConst k +++ IConst j = IArr (k +++ j)
   a        +++ b        = lift $ (lowerImprove a) +++ (lowerImprove b)
 
+  IId      ||| IId      = IArr (either id id)
+  IId      ||| IArr f   = IArr (either id f)
+  IId      ||| IConst k = IArr (either id (const k))
+  IArr f   ||| IId      = IArr (either f id)
+  IArr f   ||| IArr g   = IArr (either f g)
+  IArr f   ||| IConst k = IArr (either f (const k))
+  IConst k ||| IId      = IArr (either (const k) id)
+  IConst k ||| IArr f   = IArr (either (const k) f)
+  IConst k ||| IConst j = IArr (either (const k) (const j))
+  f        ||| g        = lift $ lowerImprove f ||| lowerImprove g
+
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
 

@@ -148,6 +148,11 @@ instance (ArrowPlus a) => Alternative (ImproveArrow a b) where
   empty = zeroArrow
   (<|>) = (<+>)
 
+instance (ArrowApply a) => Monad (ImproveArrow a b) where
+  return = IConst
+  IConst k >>= f = f k
+  x >>= f = ((x >>^ f) &&& id) >>> app
+
 instance (Arrow a) => Profunctor (ImproveArrow a) where
   dimap f g x = f ^>> x >>^ g
   lmap f x = f ^>> x

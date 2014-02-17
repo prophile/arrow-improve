@@ -88,8 +88,15 @@ instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
   f <+> g = lift (lowerImprove f <+> lowerImprove g)
 
 instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
-  left  = lift . left . lowerImprove
-  right = lift . right . lowerImprove
+  left IId        = IId
+  left (IArr f)   = IArr (left f)
+  left (IConst k) = IArr (left (const k))
+  left (IArrow a) = IArrow (left a)
+
+  right IId        = IId
+  right (IArr f)   = IArr (right f)
+  right (IConst k) = IArr (right (const k))
+  right (IArrow a) = IArrow (right a)
 
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app

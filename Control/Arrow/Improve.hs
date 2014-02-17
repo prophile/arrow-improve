@@ -144,6 +144,10 @@ instance (Arrow a) => Applicative (ImproveArrow a b) where
   pure = IConst
   f <*> x = (f &&& x) >>> arr (uncurry id)
 
+instance (ArrowPlus a) => Alternative (ImproveArrow a b) where
+  empty = zeroArrow
+  (<|>) = (<+>)
+
 instance (Arrow a) => Profunctor (ImproveArrow a) where
   dimap f g x = f ^>> x >>^ g
   lmap f x = f ^>> x

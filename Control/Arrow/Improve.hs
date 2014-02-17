@@ -10,8 +10,12 @@ import Prelude hiding (id, (.))
 import Control.Category
 import Control.Arrow
 
+import Control.Applicative
+
 import Control.Arrow.Transformer
 import Control.Arrow.Operations
+
+import Data.Profunctor
 
 import Data.Monoid
 
@@ -132,6 +136,26 @@ instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
   newError (IConst k) = IConst (Right k)
   newError (IArr f)   = IArr (Right . f)
   newError (IArrow f) = IArrow (newError f)
+
+instance (Arrow a) => Functor (ImproveArrow a b) where
+  fmap f = (>>^ f)
+
+instance (Arrow a) => Applicative (ImproveArrow a b) where
+  pure = IConst
+  f <*> x = (f &&& x) >>> arr (uncurry id)
+
+instance (Arrow a) => Profunctor (ImproveArrow a) where
+  dimap f g x = f ^>> x >>^ g
+  lmap f x = f ^>> x
+  rmap g x = x >>^ g
+
+instance (Arrow a) => Strong (ImproveArrow a) where
+  first' = first
+  second' = second
+
+instance (ArrowChoice a) => Choice (ImproveArrow a) where
+  left' = left
+  right' = right
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow

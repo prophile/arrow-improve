@@ -17,5 +17,6 @@ library
   exposed-modules:     Control.Arrow.Improve
   build-depends:
     base >=4.6 && <4.7,
-    arrows >= 0.4.4 && <0.5
+    arrows >= 0.4.4 && <0.5,
+    profunctors >= 3.2 && <5
   default-language:    Haskell2010

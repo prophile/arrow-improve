@@ -84,6 +84,13 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
 
+instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
+  loop IId             = IId
+  loop (IArr f)        = IArr f'
+    where f' x         = let (y, k) = f (x, k) in y
+  loop (IConst (k, _)) = IConst k
+  loop (IArrow f)      = IArrow (loop f)
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift = IArrow
 

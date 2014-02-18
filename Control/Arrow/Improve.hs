@@ -25,6 +25,7 @@ import Data.Functor.Bind
 import Data.Pointed
 
 import Data.Monoid
+import Data.String
 
 -- |Basic improved arrow type.
 data ImproveArrow a b c where
@@ -309,6 +310,10 @@ instance (Arrow a, Floating c) => Floating (ImproveArrow a b c) where
   {-# INLINE acosh #-}
   atanh = fmap atanh
   {-# INLINE atanh #-}
+
+instance (Arrow a, IsString c) => IsString (ImproveArrow a b c) where
+  fromString = pure . fromString
+  {-# INLINE fromString #-}
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift x = IArrow id x id

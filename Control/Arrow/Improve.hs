@@ -38,7 +38,7 @@ data ImproveArrow a b c where
 -- prop>  lift . lowerImprove = id
 lowerImprove :: (Arrow a) => ImproveArrow a b c -> a b c
 lowerImprove (IArrow f a g) = f ^>> a >>^ g
-lowerImprove (IArr f)   = arr f
+lowerImprove (IArr f)       = arr f
 
 -- |Get a function representing the arrow, if it is possible to do so.
 -- Guarantees are only made when arrows are constructed only from the

@@ -93,6 +93,14 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   IArrow f a g +++ IArr h = IArrow (left f) (left a) (g +++ h)
   IArr h +++ IArrow f a g = IArrow (right f) (right a) (h +++ g)
   IArrow f a g +++ IArrow h b i = IArrow (f +++ h) (a +++ b) (g +++ i)
+  {-# INLINABLE (+++) #-}
+
+  IArr f ||| IArr g = IArr (f ||| g)
+  IArrow f a g ||| IArr h = IArrow (left f) (left a) (g ||| h)
+  IArr h ||| IArrow f a g = IArrow (right f) (right a) (h ||| g)
+  -- TODO: use rules to turn the +++ into a ||| on the arrow when g == i
+  IArrow f a g ||| IArrow h b i = IArrow (f +++ h) (a +++ b) (g ||| i)
+  {-# INLINABLE (|||) #-}
 
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app

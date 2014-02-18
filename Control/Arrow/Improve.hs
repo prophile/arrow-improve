@@ -237,6 +237,25 @@ instance (ArrowPlus a) => Monoid (ImproveArrow a b c) where
   mappend = (<+>)
   {-# INLINE mappend #-}
 
+instance (Arrow a, Num c) => Num (ImproveArrow a b c) where
+  (+) = liftA2 (+)
+  {-# INLINE (+) #-}
+  (-) = liftA2 (-)
+  {-# INLINE (-) #-}
+  (*) = liftA2 (*)
+  {-# INLINE (*) #-}
+
+  negate = fmap negate
+  {-# INLINE negate #-}
+
+  abs = fmap abs
+  {-# INLINE abs #-}
+  signum = fmap signum
+  {-# INLINE signum #-}
+
+  fromInteger = pure . fromInteger
+  {-# INLINE fromInteger #-}
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift x = IArrow id x id
   {-# INLINE lift #-}

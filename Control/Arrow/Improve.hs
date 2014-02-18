@@ -97,6 +97,7 @@ instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
   loop (IArr f)        = IArr f'
     where f' x         = let (y, k) = f (x, k) in y
   loop (IArrow f a g)  = lift (loop (f ^>> a >>^ g))
+  {-# INLINE loop #-}
 
 instance (ArrowCircuit a) => ArrowCircuit (ImproveArrow a) where
   delay = lift . delay

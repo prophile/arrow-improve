@@ -65,6 +65,13 @@ instance (Arrow a) => Arrow (ImproveArrow a) where
   IArrow f a g *** IArrow h b i = IArrow (f *** h) (a *** b) (g *** i)
   {-# INLINABLE (***) #-}
 
+  IArr f &&& IArr g = IArr (f &&& g)
+  IArrow f a g &&& IArr h = IArrow (f &&& h) (first a) (first g)
+  IArr h &&& IArrow f a g = IArrow (h &&& f) (second a) (second g)
+  -- TODO: use a rule to use a &&& b instead when f == h
+  IArrow f a g &&& IArrow h b i = IArrow (f &&& h) (a *** b) (g *** i)
+  {-# INLINABLE (&&&) #-}
+
 instance (ArrowZero a) => ArrowZero (ImproveArrow a) where
   zeroArrow = lift zeroArrow
   {-# INLINE zeroArrow #-}

@@ -46,6 +46,7 @@ instance (Arrow a) => Category (ImproveArrow a) where
   IArr h . IArrow f a g       = IArrow f a (h . g)
   IArrow f a g . IArr h       = IArrow (f . h) a g
   IArrow f a g . IArrow h b i = IArrow h (b >>> arr (f . i) >>> a) g
+  {-# INLINABLE (.) #–}
 
 instance (Arrow a) => Arrow (ImproveArrow a) where
   arr = IArr

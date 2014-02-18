@@ -231,6 +231,12 @@ instance (ArrowPlus a) => Plus (ImproveArrow a b) where
   zero = zeroArrow
   {-# INLINE zero #-}
 
+instance (ArrowPlus a) => Monoid (ImproveArrow a b c) where
+  mempty = zeroArrow
+  {-# INLINE mempty #-}
+  mappend = (<+>)
+  {-# INLINE mappend #-}
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift x = IArrow id x id
   {-# INLINE lift #-}

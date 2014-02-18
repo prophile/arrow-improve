@@ -147,6 +147,7 @@ instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
   tryInUnless a@(IArrow _ _ _) f e = lift (tryInUnless (lowerImprove a)
                                                          (lowerImprove f)
                                                          (lowerImprove e))
+  {-# INLINABLE tryInUnless #-}
 
   newError (IArr f) = IArr (Right . f)
   newError a@(IArrow _ _ _) = lift (newError (lowerImprove a))

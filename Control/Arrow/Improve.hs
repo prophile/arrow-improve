@@ -89,6 +89,11 @@ instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
   right (IArrow f a g) = IArrow (right f) (right a) (right g)
   {-# INLINE right #-}
 
+  IArr f +++ IArr g = IArr (f +++ g)
+  IArrow f a g +++ IArr h = IArrow (left f) (left a) (g +++ h)
+  IArr h +++ IArrow f a g = IArrow (right f) (right a) (h +++ g)
+  IArrow f a g +++ IArrow h b i = IArrow (f +++ h) (a +++ b) (g +++ i)
+
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
   {-# INLINE app #-}

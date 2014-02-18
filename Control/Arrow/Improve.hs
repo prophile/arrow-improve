@@ -174,6 +174,7 @@ instance (ArrowApply a) => Monad (ImproveArrow a b) where
   return = pure
   {-# INLINE return #-}
   x >>= f = ((x >>^ f) &&& id) >>> app
+  {-# INLINE (>>=) #-}
 
 instance (ArrowPlus a, ArrowApply a) => MonadPlus (ImproveArrow a b) where
   mzero = zeroArrow

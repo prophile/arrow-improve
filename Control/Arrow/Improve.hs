@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |Improved arrows, with a whole host of minor optimisations and instances.
-module Control.Arrow.Improve(ImproveArrow, lowerImprove) where
+module Control.Arrow.Improve(ImproveArrow, lowerImprove, getFunction) where
 
 import Prelude hiding (id, (.))
 
@@ -39,6 +39,13 @@ data ImproveArrow a b c where
 lowerImprove :: (Arrow a) => ImproveArrow a b c -> a b c
 lowerImprove (IArrow f a g) = f ^>> a >>^ g
 lowerImprove (IArr f)   = arr f
+
+-- |Get a function representing the arrow, if it is possible to do so.
+-- Guarantees are only made when arrows are constructed only from the
+-- combinators of the Category, Arrow, ArrowChoice and ArrowLoop classes.
+getFunction :: ImproveArrow a b c -> Maybe (b -> c)
+getFunction (IArr f)       = Just f
+getFunction (IArrow _ _ _) = Nothing
 
 instance (Arrow a) => Category (ImproveArrow a) where
   id = arr id

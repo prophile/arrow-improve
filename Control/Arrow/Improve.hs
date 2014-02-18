@@ -256,6 +256,60 @@ instance (Arrow a, Num c) => Num (ImproveArrow a b c) where
   fromInteger = pure . fromInteger
   {-# INLINE fromInteger #-}
 
+instance (Arrow a, Fractional c) => Fractional (ImproveArrow a b c) where
+  (/) = liftA2 (/)
+  {-# INLINE (/) #-}
+
+  recip = fmap recip
+  {-# INLINE recip #-}
+
+  fromRational = pure . fromRational
+  {-# INLINE fromRational #-}
+
+instance (Arrow a, Floating c) => Floating (ImproveArrow a b c) where
+  pi = pure pi
+  {-# INLINE pi #-}
+
+  exp = fmap exp
+  {-# INLINE exp #-}
+  log = fmap log
+  {-# INLINE log #-}
+  sqrt = fmap sqrt
+  {-# INLINE sqrt #-}
+
+  (**) = liftA2 (**)
+  {-# INLINE (**) #-}
+  logBase = liftA2 logBase
+  {-# INLINE logBase #-}
+
+  sin = fmap sin
+  {-# INLINE sin #-}
+  cos = fmap cos
+  {-# INLINE cos #-}
+  tan = fmap tan
+  {-# INLINE tan #-}
+
+  asin = fmap asin
+  {-# INLINE asin #-}
+  acos = fmap acos
+  {-# INLINE acos #-}
+  atan = fmap atan
+  {-# INLINE atan #-}
+
+  sinh = fmap sinh
+  {-# INLINE sinh #-}
+  cosh = fmap cosh
+  {-# INLINE cosh #-}
+  tanh = fmap tanh
+  {-# INLINE tanh #-}
+
+  asinh = fmap asinh
+  {-# INLINE asinh #-}
+  acosh = fmap acosh
+  {-# INLINE acosh #-}
+  atanh = fmap atanh
+  {-# INLINE atanh #-}
+
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
   lift x = IArrow id x id
   {-# INLINE lift #-}

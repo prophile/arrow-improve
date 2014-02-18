@@ -28,74 +28,45 @@ import Data.Monoid
 
 -- |Basic improved arrow type.
 data ImproveArrow a b c where
-  IArrow :: a b c    -> ImproveArrow a b c
-  IArr   :: (b -> c) -> ImproveArrow a b c
-  IId    ::             ImproveArrow a b b
-  IConst :: c        -> ImproveArrow a b c
+  IArr   :: (b -> c)                      -> ImproveArrow a b c
+  IArrow :: (i -> b) -> a b c -> (c -> o) -> ImproveArrow a i o
 
 -- |Lower an improved arrow to the original arrow type.
 --
 -- prop>  lowerImprove . lift = id
 -- prop>  lift . lowerImprove = id
 lowerImprove :: (Arrow a) => ImproveArrow a b c -> a b c
-lowerImprove (IArrow a) = a
+lowerImprove (IArrow f a g) = f ^>> a >>^ g
 lowerImprove (IArr f)   = arr f
-lowerImprove IId        = id
-lowerImprove (IConst k) = arr (\_ -> k)
 
 instance (Arrow a) => Category (ImproveArrow a) where
-  id = IId
+  id = arr id
   {-# INLINE id #-}
-  IId      . x        = x
-  x        . IId      = x
-  IConst k . IArr _   = IConst k
-  IConst k . IConst _ = IConst k
-  IConst k . IArrow f = IArrow (f >>^ (\_ -> k))
-  IArr f   . IArr g   = IArr (f . g)
-  IArr f   . IConst k = IConst (f k)
-  IArr f   . IArrow g = IArrow (g >>^ f)
-  IArrow f . IArr g   = IArrow (g ^>> f)
-  IArrow f . IConst k = IArrow ((\_ -> k) ^>> f)
-  IArrow f . IArrow g = IArrow (f . g)
+  IArr f . IArr g             = IArr (f . g)
+  IArr h . IArrow f a g       = IArrow f a (h . g)
+  IArrow f a g . IArr h       = IArrow (f . h) a g
+  IArrow f a g . IArrow h b i = IArrow h (b >>> arr (f . i) >>> a) g
 
 instance (Arrow a) => Arrow (ImproveArrow a) where
   arr = IArr
   {-# INLINE arr #-}
 
-  first (IArrow x) = IArrow (first x)
-  first (IArr f)   = IArr (first f)
-  first (IConst k) = IArr (first (\_ -> k))
-  first IId        = IId
+  first (IArr f) = IArr (first f)
+  first (IArrow f a g) = IArrow (first f) (first a) (first g)
+  {-# INLINABLE first #-}
 
-  second (IArrow x) = IArrow (second x)
-  second (IArr f)   = IArr (second f)
-  second (IConst k) = IArr (second (\_ -> k))
-  second IId        = IId
+  second (IArr f) = IArr (second f)
+  second (IArrow f a g) = IArrow (second f) (second a) (second g)
+  {-# INLINABLE second #-}
 
-  IId      *** IId      = IId
-  f        *** IId      = first f
-  IId      *** f        = second f
-  IConst k *** IConst j = IConst (k, j)
-  IArr f   *** IArr g   = IArr (f *** g)
-  IArr f   *** IConst k = IArr (f *** (\_ -> k))
-  IConst k *** IArr f   = IArr ((\_ -> k) *** f)
-  f        *** g        = first f >>> second g
-
-  IId      &&& IId      = IArr (\x -> (x, x))
-  IArr f   &&& IId      = IArr (\x -> (f x, x))
-  IId      &&& IArr f   = IArr (\x -> (x, f x))
-  IArr f   &&& IArr g   = IArr (\x -> (f x, g x))
-  IConst k &&& IConst j = IConst (k, j)
-  IId      &&& IConst k = IArr (\x -> (x, k))
-  IConst k &&& IId      = IArr (\x -> (k, x))
-  IConst k &&& IArr f   = IArr (\x -> (k, f x))
-  IArr f   &&& IConst k = IArr (\x -> (f x, k))
-  IArrow f &&& IConst k = IArrow f >>> IArr (\x -> (x, k))
-  IConst k &&& IArrow f = IArrow f >>> IArr (\x -> (k, x))
-  f        &&& g        = IArr (\x -> (x, x)) >>> (f *** g)
+  IArr f *** IArr g             = IArr   (f *** g)
+  IArr h *** IArrow f a g       = IArrow (second f) (second a) (h *** g)
+  IArrow f a g *** IArr h       = IArrow (first f) (first a) (g *** h)
+  IArrow f a g *** IArrow h b i = IArrow (f *** h) (a *** b) (g *** i)
+  {-# INLINABLE (***) #-}
 
 instance (ArrowZero a) => ArrowZero (ImproveArrow a) where
-  zeroArrow = IArrow zeroArrow
+  zeroArrow = lift zeroArrow
   {-# INLINE zeroArrow #-}
 
 instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
@@ -103,46 +74,22 @@ instance (ArrowPlus a) => ArrowPlus (ImproveArrow a) where
   {-# INLINE (<+>) #-}
 
 instance (ArrowChoice a) => ArrowChoice (ImproveArrow a) where
-  left IId        = IId
-  left (IArr f)   = IArr (left f)
-  left (IConst k) = IArr (left (const k))
-  left (IArrow a) = IArrow (left a)
+  left (IArr f) = IArr (left f)
+  left (IArrow f a g) = IArrow (left f) (left a) (left g)
+  {-# INLINE left #-}
 
-  right IId        = IId
-  right (IArr f)   = IArr (right f)
-  right (IConst k) = IArr (right (const k))
-  right (IArrow a) = IArrow (right a)
-
-  IId      +++ IId      = IId
-  IId      +++ f        = right f
-  f        +++ IId      = left f
-  IArr f   +++ IArr g   = IArr (f +++ g)
-  IArr f   +++ IConst k = IArr (f +++ const k)
-  IConst k +++ IArr f   = IArr (const k +++ f)
-  IConst k +++ IConst j = IArr (const k +++ const j)
-  a        +++ b        = lift $ (lowerImprove a) +++ (lowerImprove b)
-
-  IId      ||| IId      = IArr (either id id)
-  IId      ||| IArr f   = IArr (either id f)
-  IId      ||| IConst k = IArr (either id (const k))
-  IArr f   ||| IId      = IArr (either f id)
-  IArr f   ||| IArr g   = IArr (either f g)
-  IArr f   ||| IConst k = IArr (either f (const k))
-  IConst k ||| IId      = IArr (either (const k) id)
-  IConst k ||| IArr f   = IArr (either (const k) f)
-  IConst k ||| IConst j = IArr (either (const k) (const j))
-  f        ||| g        = lift $ lowerImprove f ||| lowerImprove g
+  right (IArr f) = IArr (right f)
+  right (IArrow f a g) = IArrow (right f) (right a) (right g)
+  {-# INLINE right #-}
 
 instance (ArrowApply a) => ArrowApply (ImproveArrow a) where
   app = lift $ first lowerImprove ^>> app
   {-# INLINE app #-}
 
 instance (ArrowLoop a) => ArrowLoop (ImproveArrow a) where
-  loop IId             = IId
   loop (IArr f)        = IArr f'
     where f' x         = let (y, k) = f (x, k) in y
-  loop (IConst (k, _)) = IConst k
-  loop (IArrow f)      = IArrow (loop f)
+  loop (IArrow f a g)  = lift (loop (f ^>> a >>^ g))
 
 instance (ArrowCircuit a) => ArrowCircuit (ImproveArrow a) where
   delay = lift . delay
@@ -157,43 +104,39 @@ instance (ArrowState s a) => ArrowState s (ImproveArrow a) where
 instance (ArrowReader r a) => ArrowReader r (ImproveArrow a) where
   readState = lift readState
   {-# INLINE readState #-}
-  newReader IId = IArr fst
-  newReader (IConst k) = IConst k
-  newReader x = IArrow (newReader (lowerImprove x))
+  newReader = lift . newReader . lowerImprove
+  {-# INLINE newReader #-}
 
 instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
   write = lift write
   {-# INLINE write #-}
-  newWriter IId        = IArr (\x -> (x, mempty))
-  newWriter (IConst k) = IConst (k, mempty)
-  newWriter (IArr f)   = IArr ((\x -> (x, mempty)) . f)
-  newWriter (IArrow a) = IArrow (newWriter a)
+  newWriter (IArr f)       = IArr ((\x -> (x, mempty)) . f)
+  newWriter (IArrow f a g) = IArrow f (newWriter (a >>^ g)) id
+  {-# INLINABLE newWriter #-}
 
 instance (ArrowError ex a) => ArrowError ex (ImproveArrow a) where
   raise = lift raise
   {-# INLINE raise #-}
 
-  handle IId _        = IId
-  handle (IConst k) _ = IConst k
-  handle (IArr f) _   = IArr f
-  handle (IArrow f) e = IArrow (handle f (lowerImprove e))
+  handle (IArr f) _       = IArr f
+  handle a@(IArrow _ _ _) e = lift (handle (lowerImprove a) (lowerImprove e))
+  {-# INLINABLE handle #-}
 
-  tryInUnless IId f _        = IArr (\x -> (x, x)) >>> f
-  tryInUnless (IConst k) f _ = IArr (\x -> (x, k)) >>> f
   tryInUnless (IArr g) f _   = IArr (\x -> (x, g x)) >>> f
-  tryInUnless (IArrow a) f e = IArrow (tryInUnless a (lowerImprove f) (lowerImprove e))
+  tryInUnless a@(IArrow _ _ _) f e = lift (tryInUnless (lowerImprove a)
+                                                         (lowerImprove f)
+                                                         (lowerImprove e))
 
-  newError IId        = IArr Right
-  newError (IConst k) = IConst (Right k)
-  newError (IArr f)   = IArr (Right . f)
-  newError (IArrow f) = IArrow (newError f)
+  newError (IArr f) = IArr (Right . f)
+  newError a@(IArrow _ _ _) = lift (newError (lowerImprove a))
+  {-# INLINABLE newError #-}
 
 instance (Arrow a) => Functor (ImproveArrow a b) where
   fmap f = (>>^ f)
   {-# INLINE fmap #-}
 
 instance (Arrow a) => Applicative (ImproveArrow a b) where
-  pure = IConst
+  pure k = IArr (\_ -> k)
   {-# INLINE pure #-}
   f <*> x = (f &&& x) >>^ uncurry id
   {-# INLINE (<*>) #-}
@@ -205,9 +148,8 @@ instance (ArrowPlus a) => Alternative (ImproveArrow a b) where
   {-# INLINE (<|>) #-}
 
 instance (ArrowApply a) => Monad (ImproveArrow a b) where
-  return = IConst
+  return = pure
   {-# INLINE return #-}
-  IConst k >>= f = f k
   x >>= f = ((x >>^ f) &&& id) >>> app
 
 instance (ArrowPlus a, ArrowApply a) => MonadPlus (ImproveArrow a b) where
@@ -265,6 +207,6 @@ instance (ArrowPlus a) => Plus (ImproveArrow a b) where
   {-# INLINE zero #-}
 
 instance (Arrow a) => ArrowTransformer ImproveArrow a where
-  lift = IArrow
+  lift x = IArrow id x id
   {-# INLINE lift #-}
 

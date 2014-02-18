@@ -125,7 +125,8 @@ instance (ArrowState s a) => ArrowState s (ImproveArrow a) where
 instance (ArrowReader r a) => ArrowReader r (ImproveArrow a) where
   readState = lift readState
   {-# INLINE readState #-}
-  newReader = lift . newReader . lowerImprove
+  newReader (IArr f) = lift $ newReader $ arr f
+  newReader (IArrow f a g) = IArrow id (newReader (f ^>> a)) g
   {-# INLINE newReader #-}
 
 instance (Monoid w, ArrowWriter w a) => ArrowWriter w (ImproveArrow a) where
